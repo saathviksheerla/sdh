@@ -5,6 +5,9 @@ import base64
 from io import BytesIO
 from PIL import Image
 import os
+import hashlib
+import time
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -14,6 +17,141 @@ load_dotenv()
 BUCKET_NAME = "sdh-saree-dhothi-ceremony"  # Replace with your bucket name
 IMAGES_PER_PAGE = 8
 MAX_IMAGE_SIZE = (300, 300)  # Thumbnail size for display
+
+# Security Configuration
+MAX_ATTEMPTS = 5  # Maximum login attempts
+LOCKOUT_DURATION = 60*60  # Lockout duration in seconds (60 minutes)
+SESSION_TIMEOUT = 3600*12  # Session timeout in seconds (12 hours)
+
+# Security functions
+def hash_pin(pin):
+    """Hash PIN using SHA-256"""
+    return hashlib.sha256(pin.encode()).hexdigest()
+
+def get_correct_pin_hash():
+    """Get the correct PIN hash from environment variable"""
+    pin = os.environ.get('APP_PIN')
+    if not pin:
+        st.error("⚠️ APP_PIN not set in environment variables!")
+        st.stop()
+    return hash_pin(pin)
+
+def initialize_security_state():
+    """Initialize security-related session state"""
+    if 'authenticated' not in st.session_state:
+        st.session_state.authenticated = False
+    if 'auth_time' not in st.session_state:
+        st.session_state.auth_time = None
+    if 'failed_attempts' not in st.session_state:
+        st.session_state.failed_attempts = 0
+    if 'lockout_until' not in st.session_state:
+        st.session_state.lockout_until = None
+
+def is_locked_out():
+    """Check if user is currently locked out"""
+    if st.session_state.lockout_until:
+        if datetime.now() < st.session_state.lockout_until:
+            return True
+        else:
+            # Lockout period expired, reset
+            st.session_state.lockout_until = None
+            st.session_state.failed_attempts = 0
+    return False
+
+def is_session_expired():
+    """Check if the current session has expired"""
+    if st.session_state.auth_time:
+        return datetime.now() - st.session_state.auth_time > timedelta(seconds=SESSION_TIMEOUT)
+    return True
+
+def authenticate_user():
+    """Handle user authentication"""
+    initialize_security_state()
+    
+    # Check if session expired
+    if st.session_state.authenticated and is_session_expired():
+        st.session_state.authenticated = False
+        st.session_state.auth_time = None
+        st.warning("Session expired. Please log in again.")
+        st.rerun()
+    
+    # If already authenticated and session valid, return True
+    if st.session_state.authenticated and not is_session_expired():
+        return True
+    
+    # Show login form
+    st.title("🔐 Authentication Required")
+    st.info("Please enter your PIN to access the photo browser.")
+    
+    # Check if locked out
+    if is_locked_out():
+        remaining_time = int((st.session_state.lockout_until - datetime.now()).total_seconds())
+        st.error(f"🚫 Too many failed attempts. Please try again in {remaining_time} seconds.")
+        
+        # Auto-refresh every 10 seconds during lockout
+        time.sleep(10)
+        st.rerun()
+        return False
+    
+    # Show remaining attempts
+    remaining_attempts = MAX_ATTEMPTS - st.session_state.failed_attempts
+    if st.session_state.failed_attempts > 0:
+        st.warning(f"⚠️ {remaining_attempts} attempts remaining before lockout.")
+    
+    # PIN input form
+    with st.form("login_form"):
+        pin_input = st.text_input(
+            "Enter PIN:", 
+            type="password", 
+            placeholder="Enter your 4-digit PIN",
+            max_chars=10,
+            help="Enter the PIN to access your photos"
+        )
+        
+        submit_button = st.form_submit_button("🔓 Login")
+        
+        if submit_button:
+            if not pin_input:
+                st.error("Please enter a PIN.")
+                return False
+            
+            # Verify PIN
+            correct_pin_hash = get_correct_pin_hash()
+            entered_pin_hash = hash_pin(pin_input)
+            
+            if entered_pin_hash == correct_pin_hash:
+                # Successful login
+                st.session_state.authenticated = True
+                st.session_state.auth_time = datetime.now()
+                st.session_state.failed_attempts = 0
+                st.session_state.lockout_until = None
+                st.success("✅ Authentication successful!")
+                time.sleep(1)
+                st.rerun()
+            else:
+                # Failed login
+                st.session_state.failed_attempts += 1
+                
+                if st.session_state.failed_attempts >= MAX_ATTEMPTS:
+                    # Lockout user
+                    st.session_state.lockout_until = datetime.now() + timedelta(seconds=LOCKOUT_DURATION)
+                    st.error(f"🚫 Too many failed attempts! Locked out for {LOCKOUT_DURATION // 60} minutes.")
+                else:
+                    remaining = MAX_ATTEMPTS - st.session_state.failed_attempts
+                    st.error(f"❌ Incorrect PIN. {remaining} attempts remaining.")
+                
+                time.sleep(2)
+                st.rerun()
+    
+    return False
+
+def logout_user():
+    """Handle user logout"""
+    st.session_state.authenticated = False
+    st.session_state.auth_time = None
+    st.session_state.failed_attempts = 0
+    st.session_state.lockout_until = None
+    st.rerun()
 
 # Initialize S3 client
 @st.cache_resource
@@ -147,7 +285,23 @@ def main():
         layout="wide"
     )
     
+    # Authentication check - this runs first
+    if not authenticate_user():
+        return
+    
+    # Main app content (only shown if authenticated)
     st.title("📸 SDH Saree Dhothi Ceremony Photo Browser")
+    
+    # Show authentication status and logout button
+    col1, col2, col3 = st.columns([2, 1, 1])
+    with col1:
+        if st.session_state.auth_time:
+            session_remaining = SESSION_TIMEOUT - int((datetime.now() - st.session_state.auth_time).total_seconds())
+            st.success(f"✅ Authenticated | Session expires in {session_remaining // 60} minutes")
+    
+    with col3:
+        if st.button("🚪 Logout"):
+            logout_user()
     
     # Check if environment variables are loaded
     if not os.environ.get('AWS_ACCESS_KEY_ID') or not os.environ.get('AWS_SECRET_ACCESS_KEY'):
@@ -158,15 +312,9 @@ def main():
     # Sidebar for configuration
     with st.sidebar:
         st.header("Configuration")
-        # bucket_name = st.text_input("S3 Bucket Name", value=BUCKET_NAME)
         images_per_page = st.slider("Images per page", 6, 24, IMAGES_PER_PAGE)
         
         st.header("Navigation")
-        
-        # Debug info (remove in production)
-        # if st.checkbox("Show debug info"):
-            # st.write("AWS Access Key ID:", os.environ.get('AWS_ACCESS_KEY_ID', 'Not found')[:10] + "..." if os.environ.get('AWS_ACCESS_KEY_ID') else 'Not found')
-            # st.write("AWS Secret Key:", "Found" if os.environ.get('AWS_SECRET_ACCESS_KEY') else 'Not found')
     
     # Initialize session state
     if 'current_path' not in st.session_state:
