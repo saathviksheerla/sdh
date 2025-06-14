@@ -22,7 +22,7 @@ FULLSCREEN_IMAGE_SIZE = (1440, 1440)  # Fullscreen image size
 # Security Configuration
 MAX_ATTEMPTS = 5  # Maximum login attempts
 LOCKOUT_DURATION = 60*60  # Lockout duration in seconds (60 minutes)
-SESSION_TIMEOUT = 3600*12  # Session timeout in seconds (12 hours)
+SESSION_TIMEOUT = 60*60  # Session timeout in seconds (1 hour)
 
 # Custom CSS for mobile-first responsive design
 def load_custom_css():
