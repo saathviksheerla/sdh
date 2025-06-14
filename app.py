@@ -15,13 +15,216 @@ load_dotenv()
 
 # Configuration
 BUCKET_NAME = "sdh-saree-dhothi-ceremony"  # Replace with your bucket name
-IMAGES_PER_PAGE = 30
+IMAGES_PER_PAGE = 24
 MAX_IMAGE_SIZE = (400, 400)  # Thumbnail size for display
+FULLSCREEN_IMAGE_SIZE = (1440, 1440)  # Fullscreen image size
 
 # Security Configuration
 MAX_ATTEMPTS = 5  # Maximum login attempts
 LOCKOUT_DURATION = 60*60  # Lockout duration in seconds (60 minutes)
 SESSION_TIMEOUT = 3600*12  # Session timeout in seconds (12 hours)
+
+# Custom CSS for mobile-first responsive design
+def load_custom_css():
+    st.markdown("""
+    <style>
+    /* Mobile-first responsive design */
+    .main .block-container {
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+        max-width: 100%;
+    }
+    
+    /* Responsive grid for images */
+    .image-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
+        margin: 10px 0;
+    }
+    
+    @media (min-width: 768px) {
+        .image-grid {
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .main .block-container {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+    }
+    
+    @media (min-width: 1024px) {
+        .image-grid {
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        .main .block-container {
+            padding-left: 2rem;
+            padding-right: 2rem;
+        }
+    }
+    
+    /* Image container styling */
+    .image-container {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+        background: white;
+    }
+    
+    .image-container:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    
+    /* Image styling */
+    .image-container img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    
+    /* Image info section */
+    .image-info {
+        padding: 8px;
+        background: #f8f9fa;
+    }
+    
+    .image-filename {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 4px;
+        word-break: break-word;
+    }
+    
+    .image-details {
+        font-size: 0.7rem;
+        color: #666;
+        margin-bottom: 8px;
+    }
+    
+    /* Button styling */
+    .action-buttons {
+        display: flex;
+        gap: 5px;
+        justify-content: space-between;
+    }
+    
+    .btn-small {
+        font-size: 0.7rem !important;
+        padding: 4px 8px !important;
+        min-height: 28px !important;
+        border-radius: 4px !important;
+    }
+    
+    /* Fullscreen view */
+    .fullscreen-header {
+        background: #f8f9fa;
+        padding: 10px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+    
+    .fullscreen-close-btn {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-size: 16px;
+        cursor: pointer;
+        width: 100%;
+        margin-bottom: 20px;
+    }
+    
+    /* Folder button styling */
+    .folder-button {
+        display: block;
+        width: 100%;
+        padding: 12px;
+        margin: 5px 0;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.2s;
+        text-align: center;
+    }
+    
+    .folder-button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    
+    /* Pagination styling */
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        margin: 20px 0;
+        flex-wrap: wrap;
+    }
+    
+    .pagination-info {
+        font-size: 0.9rem;
+        color: #666;
+        text-align: center;
+        margin: 0 10px;
+    }
+    
+    /* Status indicators */
+    .status-container {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        margin-bottom: 20px;
+    }
+    
+    @media (min-width: 768px) {
+        .status-container {
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+        }
+    }
+    
+    /* Loading animation */
+    .loading-placeholder {
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: loading 1.5s infinite;
+        height: 200px;
+        border-radius: 4px;
+    }
+    
+    @keyframes loading {
+        0% {
+            background-position: 200% 0;
+        }
+        100% {
+            background-position: -200% 0;
+        }
+    }
+    
+    /* Hide Streamlit's default sidebar toggle on mobile */
+    @media (max-width: 768px) {
+        .css-1d391kg {
+            padding-left: 1rem;
+        }
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
 # Security functions
 def hash_pin(pin):
@@ -108,7 +311,7 @@ def authenticate_user():
             help="Enter the PIN to access your photos"
         )
         
-        submit_button = st.form_submit_button("🔓 Login")
+        submit_button = st.form_submit_button("🔓 Login", use_container_width=True)
         
         if submit_button:
             if not pin_input:
@@ -272,6 +475,69 @@ def get_image_thumbnail(bucket, key):
         print(error_msg)  # For debugging
         return None
 
+@st.cache_data(ttl=3600)  # Cache fullscreen images for 1 hour
+def get_fullscreen_image(bucket, key):
+    """Get full-resolution image for fullscreen display"""
+    s3_client = get_s3_client()
+    if not s3_client:
+        return None
+    
+    try:
+        # Get object from S3
+        response = s3_client.get_object(Bucket=bucket, Key=key)
+        image_data = response['Body'].read()
+        
+        # Validate that we have data
+        if not image_data or len(image_data) == 0:
+            return None
+        
+        # Try to open and process the image
+        try:
+            image_buffer = BytesIO(image_data)
+            image = Image.open(image_buffer)
+            
+            # Convert to RGB if necessary
+            if image.mode not in ('RGB', 'L'):
+                image = image.convert('RGB')
+            
+            # Resize for fullscreen if too large
+            if image.size[0] > FULLSCREEN_IMAGE_SIZE[0] or image.size[1] > FULLSCREEN_IMAGE_SIZE[1]:
+                image.thumbnail(FULLSCREEN_IMAGE_SIZE, Image.Resampling.LANCZOS)
+            
+            # Convert to base64 for display
+            output_buffer = BytesIO()
+            image.save(output_buffer, format='JPEG', quality=95, optimize=True)
+            img_base64 = base64.b64encode(output_buffer.getvalue()).decode()
+            
+            return img_base64
+            
+        except Exception as img_error:
+            return None
+            
+    except Exception as e:
+        return None
+
+def show_fullscreen_image(image_base64, filename):
+    """Display fullscreen image view"""
+    st.markdown(f"""
+    <div class="fullscreen-header">
+        <h3>🔍 {filename}</h3>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Close button at the top
+    if st.button("✕ Close", key="close_fullscreen", use_container_width=True, type="primary"):
+        st.session_state.fullscreen_image = None
+        st.rerun()
+    
+    # Display the image
+    st.image(f"data:image/jpeg;base64,{image_base64}", use_container_width=True)
+    
+    # Close button at the bottom
+    if st.button("← Back to Gallery", key="back_to_gallery", use_container_width=True):
+        st.session_state.fullscreen_image = None
+        st.rerun()
+
 def paginate_images(images, page, per_page):
     """Paginate image list"""
     start = page * per_page
@@ -280,28 +546,49 @@ def paginate_images(images, page, per_page):
 
 def main():
     st.set_page_config(
-        page_title="SDH Saree Dhothi Ceremony Photo Browser",
+        page_title="SDH Ceremony Photos",
         page_icon="📸",
-        layout="wide"
+        layout="wide",
+        initial_sidebar_state="collapsed"
     )
+    
+    # Load custom CSS
+    load_custom_css()
     
     # Authentication check - this runs first
     if not authenticate_user():
         return
     
-    # Main app content (only shown if authenticated)
-    st.title("📸 SDH Saree Dhothi Ceremony Photo Browser")
+    # Initialize fullscreen state
+    if 'fullscreen_image' not in st.session_state:
+        st.session_state.fullscreen_image = None
+    
+    # Show fullscreen image if requested
+    if st.session_state.fullscreen_image:
+        show_fullscreen_image(
+            st.session_state.fullscreen_image['data'],
+            st.session_state.fullscreen_image['filename']
+        )
+        return
+    
+    # Main app content (only shown if authenticated and not in fullscreen mode)
+    st.title("📸 SDH Ceremony Photos")
     
     # Show authentication status and logout button
-    col1, col2, col3 = st.columns([2, 1, 1])
-    with col1:
-        if st.session_state.auth_time:
-            session_remaining = SESSION_TIMEOUT - int((datetime.now() - st.session_state.auth_time).total_seconds())
-            st.success(f"✅ Authenticated | Session expires in {session_remaining // 60} minutes")
-    
-    with col3:
-        if st.button("🚪 Logout"):
-            logout_user()
+    with st.container():
+        st.markdown('<div class="status-container">', unsafe_allow_html=True)
+        col1, col2 = st.columns([3, 1])
+        
+        with col1:
+            if st.session_state.auth_time:
+                session_remaining = SESSION_TIMEOUT - int((datetime.now() - st.session_state.auth_time).total_seconds())
+                st.success(f"✅ Authenticated | Session: {session_remaining // 60}min remaining", icon="✅")
+        
+        with col2:
+            if st.button("🚪 Logout", use_container_width=True):
+                logout_user()
+        
+        st.markdown('</div>', unsafe_allow_html=True)
     
     # Check if environment variables are loaded
     if not os.environ.get('AWS_ACCESS_KEY_ID') or not os.environ.get('AWS_SECRET_ACCESS_KEY'):
@@ -311,10 +598,10 @@ def main():
     
     # Sidebar for configuration
     with st.sidebar:
-        st.header("Configuration")
-        images_per_page = st.slider("Images per page", 8, 120, IMAGES_PER_PAGE)
-        
-        st.header("Navigation")
+        st.header("⚙️ Settings")
+        images_per_page = st.slider("Images per page", 8, 60, 20, help="Adjust for better performance")
+        st.header("📱 Mobile Optimized")
+        st.info("This app is designed for mobile-first experience")
     
     # Initialize session state
     if 'current_path' not in st.session_state:
@@ -346,42 +633,39 @@ def main():
     # Breadcrumb navigation
     if st.session_state.current_path:
         path_parts = st.session_state.current_path.strip('/').split('/')
-        breadcrumb = "Home"
+        breadcrumb = "🏠 Home"
         for i, part in enumerate(path_parts):
             if part:
-                breadcrumb += f" > {part}"
-        st.subheader(f"📁 {breadcrumb}")
+                breadcrumb += f" › {part}"
+        st.markdown(f"### {breadcrumb}")
         
-        if st.button("⬆️ Back to Parent"):
+        if st.button("⬅️ Back", use_container_width=True):
             if st.session_state.path_history:
                 st.session_state.current_path = st.session_state.path_history.pop()
             else:
                 st.session_state.current_path = ""
             st.session_state.page = 0
             st.rerun()
+    else:
+        st.markdown("### 🏠 Home")
     
     # List folders at current level
     folders = list_folders(s3_client, BUCKET_NAME, st.session_state.current_path)
     
     if folders:
-        st.subheader("📂 Folders")
-        cols = st.columns(min(4, len(folders)))
-        
-        for i, (folder_name, folder_path) in enumerate(folders):
-            with cols[i % 4]:
-                if st.button(f"📁 {folder_name}", key=f"folder_{i}"):
-                    st.session_state.path_history.append(st.session_state.current_path)
-                    st.session_state.current_path = folder_path
-                    st.session_state.page = 0
-                    st.rerun()
+        st.markdown("#### 📂 Folders")
+        for folder_name, folder_path in folders:
+            if st.button(f"📁 {folder_name}", key=f"folder_{folder_name}", use_container_width=True):
+                st.session_state.path_history.append(st.session_state.current_path)
+                st.session_state.current_path = folder_path
+                st.session_state.page = 0
+                st.rerun()
     
     # List and display images
-    st.subheader("🖼️ Images")
-    
     images = list_images(BUCKET_NAME, st.session_state.current_path)
     
     if not images:
-        st.info("No images found in this folder.")
+        st.info("📷 No images found in this folder.")
         return
     
     # Pagination
@@ -390,63 +674,106 @@ def main():
     )
     
     # Pagination controls
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        total_pages = (total_images - 1) // images_per_page + 1
-        st.write(f"Page {st.session_state.page + 1} of {total_pages} | {total_images} images total")
-        
-        col_prev, col_next = st.columns(2)
-        with col_prev:
-            if st.button("⬅️ Previous", disabled=st.session_state.page == 0):
-                st.session_state.page = max(0, st.session_state.page - 1)
-                st.rerun()
-        
-        with col_next:
-            if st.button("➡️ Next", disabled=st.session_state.page >= total_pages - 1):
-                st.session_state.page = min(total_pages - 1, st.session_state.page + 1)
-                st.rerun()
+    total_pages = (total_images - 1) // images_per_page + 1
     
-    # Display images in grid
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col1:
+        if st.button("⬅️ Previous", disabled=st.session_state.page == 0, use_container_width=True):
+            st.session_state.page = max(0, st.session_state.page - 1)
+            st.rerun()
+    
+    with col2:
+        st.markdown(f"""
+        <div class="pagination-info">
+            Page {st.session_state.page + 1} of {total_pages}<br>
+            <small>{total_images} images total</small>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        if st.button("Next ➡️", disabled=st.session_state.page >= total_pages - 1, use_container_width=True):
+            st.session_state.page = min(total_pages - 1, st.session_state.page + 1)
+            st.rerun()
+    
+    # Display images in responsive grid
     if current_images:
-        cols = st.columns(4)
+        st.markdown("#### 🖼️ Images")
+        
+        # Create responsive columns
+        cols = st.columns(2)  # 2 columns for mobile
+        if st.session_state.get('screen_width', 768) > 768:
+            cols = st.columns(3)  # 3 columns for tablet
+        if st.session_state.get('screen_width', 768) > 1024:
+            cols = st.columns(4)  # 4 columns for desktop
         
         for i, img_info in enumerate(current_images):
-            with cols[i % 4]:
+            with cols[i % len(cols)]:
                 with st.container():
-                    # Show loading placeholder
+                    # Create a card-like container
+                    card_html = f"""
+                    <div class="image-container">
+                        <div class="loading-placeholder" id="loading-{i}"></div>
+                    </div>
+                    """
                     placeholder = st.empty()
-                    placeholder.info(f"Loading {img_info['filename']}...")
+                    placeholder.markdown(card_html, unsafe_allow_html=True)
                     
                     # Load thumbnail
                     thumbnail = get_image_thumbnail(BUCKET_NAME, img_info['key'])
                     
                     if thumbnail:
                         placeholder.empty()
+                        
+                        # Display image
                         st.image(
                             f"data:image/jpeg;base64,{thumbnail}",
-                            caption=img_info['filename'],
+                            use_container_width=True
                         )
                         
                         # Image info
-                        st.caption(f"Size: {img_info['size'] / 1024:.1f} KB")
-                        st.caption(f"Modified: {img_info['last_modified'].strftime('%Y-%m-%d')}")
+                        st.markdown(f"""
+                        <div class="image-info">
+                            <div class="image-filename">{img_info['filename']}</div>
+                            <div class="image-details">
+                                {img_info['size'] / 1024:.1f} KB • {img_info['last_modified'].strftime('%m/%d/%Y')}
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
                         
-                        # Download button
-                        if st.button(f"⬇️ Download", key=f"download_{i}"):
-                            try:
-                                response = s3_client.get_object(Bucket=BUCKET_NAME, Key=img_info['key'])
-                                st.download_button(
-                                    label="💾 Click to download",
-                                    data=response['Body'].read(),
-                                    file_name=img_info['filename'],
-                                    mime='image/jpeg'
-                                )
-                            except ClientError as e:
-                                st.error(f"Download failed: {e}")
+                        # Action buttons
+                        col_view, col_download = st.columns(2)
+                        
+                        with col_view:
+                            if st.button("👁️ View", key=f"view_{img_info['key']}", use_container_width=True):
+                                # Load fullscreen image
+                                with st.spinner("Loading fullscreen image..."):
+                                    fullscreen_img = get_fullscreen_image(BUCKET_NAME, img_info['key'])
+                                    if fullscreen_img:
+                                        st.session_state.fullscreen_image = {
+                                            'data': fullscreen_img,
+                                            'filename': img_info['filename']
+                                        }
+                                        st.rerun()
+                                    else:
+                                        st.error("Could not load fullscreen image")
+                        
+                        with col_download:
+                            if st.button("⬇️ Save", key=f"download_{img_info['key']}", use_container_width=True):
+                                try:
+                                    response = s3_client.get_object(Bucket=BUCKET_NAME, Key=img_info['key'])
+                                    st.download_button(
+                                        label="💾 Download",
+                                        data=response['Body'].read(),
+                                        file_name=img_info['filename'],
+                                        mime='image/jpeg',
+                                        use_container_width=True,
+                                        key=f"dl_btn_{img_info['key']}"
+                                    )
+                                except ClientError as e:
+                                    st.error(f"Download failed: {e}")
                     else:
                         placeholder.empty()
-                        st.error(f"❌ Cannot load: {img_info['filename']}")
-                        st.caption(f"File may be corrupted or in unsupported format")
+                        st.error(f"❌ Failed to load: {img_info['filename'][:20]}...")
                         st.caption(f"Size: {img_info['size'] / 1024:.1f} KB")
 
 if __name__ == "__main__":
