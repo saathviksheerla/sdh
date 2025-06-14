@@ -15,8 +15,8 @@ load_dotenv()
 
 # Configuration
 BUCKET_NAME = "sdh-saree-dhothi-ceremony"  # Replace with your bucket name
-IMAGES_PER_PAGE = 8
-MAX_IMAGE_SIZE = (300, 300)  # Thumbnail size for display
+IMAGES_PER_PAGE = 30
+MAX_IMAGE_SIZE = (400, 400)  # Thumbnail size for display
 
 # Security Configuration
 MAX_ATTEMPTS = 5  # Maximum login attempts
@@ -312,7 +312,7 @@ def main():
     # Sidebar for configuration
     with st.sidebar:
         st.header("Configuration")
-        images_per_page = st.slider("Images per page", 6, 24, IMAGES_PER_PAGE)
+        images_per_page = st.slider("Images per page", 8, 120, IMAGES_PER_PAGE)
         
         st.header("Navigation")
     
