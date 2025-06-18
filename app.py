@@ -16,7 +16,7 @@ load_dotenv()
 # Configuration
 BUCKET_NAME = "sdh-saree-dhothi-ceremony"  # Replace with your bucket name
 IMAGES_PER_PAGE = 24
-MAX_IMAGE_SIZE = (400, 400)  # Thumbnail size for display
+MAX_IMAGE_SIZE = (250, 250)  # Thumbnail size for display
 FULLSCREEN_IMAGE_SIZE = (1440, 1440)  # Fullscreen image size
 
 # Security Configuration
@@ -693,6 +693,22 @@ def main():
     with col3:
         if st.button("Next ➡️", disabled=st.session_state.page >= total_pages - 1, use_container_width=True):
             st.session_state.page = min(total_pages - 1, st.session_state.page + 1)
+            st.rerun()
+    
+    # Direct page navigation
+    if total_pages > 1:
+        st.markdown("**Go to page:**")
+        page_input = st.number_input(
+            "Enter page number:",
+            min_value=1,
+            max_value=total_pages,
+            value=st.session_state.page + 1,
+            step=1,
+            key="page_input"
+        )
+        
+        if st.button("Go to Page", use_container_width=True):
+            st.session_state.page = page_input - 1
             st.rerun()
     
     # Display images in responsive grid
