@@ -306,7 +306,7 @@ def authenticate_user():
         pin_input = st.text_input(
             "Enter PIN:", 
             type="password", 
-            placeholder="Enter your 4-digit PIN",
+            placeholder="Enter your PIN",
             max_chars=10,
             help="Enter the PIN to access your photos"
         )
